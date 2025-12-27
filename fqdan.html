@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلب فقدان أو استبدال الهوية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+        h2 {
+            text-align: center;
+            color: #004085;
+            font-weight: 700;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 700;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #747474;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            transition: all 0.3s ease-in-out;
+        }
+        .custom-file-label {
+            display: block;
+            padding: 10px;
+            border: 2px solid #747474;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        input:focus, select:focus {
+            border-color: #0069d9;
+            box-shadow: 0 0 8px rgba(0, 105, 217, 0.5);
+            outline: none;
+        }
+        select {
+            background-color: #fff;
+            cursor: pointer;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #004085;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s ease-in-out;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        .hidden {
+            display: none;
+        }
+        .inline-fields {
+            display: flex;
+            gap: 10px;
+        }
+        .inline-fields .form-group {
+            width: 50%;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        input[type="file"]::before {
+            content: 'الضغط لاختيار الملف';
+            display: inline-block;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="file"]:not(:valid)::after {
+            content: 'لا يوجد ملف مرفوع';
+            display: block;
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>طلب فقدان أو استبدال الهوية</h2>
+        <form id="leaveForm" action="requests.php" method="POST" enctype="multipart/form-data">
+            <div class="form-group inline-fields">
+                <div class="form-group">
+                    <label for="name">اسم الطالب:</label>
+                    <input type="text" id="name" name="name" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="studentId">الرقم الجامعي:</label>
+                    <input type="text" id="studentId" name="studentId" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="requestType">نوع الطلب:</label>
+                <select id="requestType" name="requestType" onchange="updateForm()" required>
+                    <option value="">اختر نوع الطلب</option>
+                    <option value="استبدال البطاقة">استبدال البطاقة</option>
+                    <option value="التبليغ عن الفقدان">التبليغ عن الفقدان</option>
+                </select>
+            </div>
+            <div id="replacementFields" class="form-group hidden">
+                <label for="reason">سبب الاستبدال:</label>
+                <input type="text" id="reason" name="reason">
+                <label for="medicalFile">إرفاق صورة (اختياري):</label>
+
+                <label class="custom-file-label" id="deathProofLabel" for="deathProof">الضغط لاختيار الملف</label>
+                <input type="file" id="deathProof" name="deathProof" onchange="updateFileLabel('deathProof')" hidden>
+            </div>
+            <div id="lossFields" class="form-group hidden">
+                <label for="lostPlace">أين أضعتها؟</label>
+                <input type="text" id="lostPlace" name="lostPlace">
+                <label for="lostAction">ماذا تريد؟</label>
+                <select id="lostAction" name="lostAction">
+                    <option value="">اختر</option>
+                    <option value="استبدال البطاقة">استبدال البطاقة</option>
+                    <option value="انتظار العثور عليها">انتظار العثور عليها</option>
+                </select>
+            </div>
+            <p><strong>ملاحظة:</strong> إذا كان طلبك استبدال فقط وليس فقدان، فهناك غرامة مالية 50,000 دينار عراقي. وإذا كانت فقدان، فيجب كتابة تعهد عند استلام البطاقة مع دفع غرامة 50,000 دينار.</p>
+            <button type="submit">إرسال الطلب</button>
+        </form>
+    </div>
+    <script>
+                const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('student_id');
+        const studentName = urlParams.get('student_name');
+    
+        // تعيين القيم داخل حقول الإدخال إذا كانت موجودة
+        document.addEventListener("DOMContentLoaded", function() {
+    document.querySelector("form").addEventListener("submit", function(event) {
+        let requestType = document.getElementById("requestType").value;
+        if (!requestType) {
+            alert("يرجى اختيار نوع الطلب قبل الإرسال.");
+            event.preventDefault();
+        }
+    });
+});
+document.getElementById("leaveForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // منع الإرسال الافتراضي
+    
+            let formData = new FormData(this);
+            fetch("agaza.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.text())
+            .then(responseText => {
+                console.log(responseText);
+                // إعادة توجيه المستخدم إلى TLPAT.php مع تمرير بيانات الطالب
+                window.location.href = `TLPAT.php?student_id=${encodeURIComponent(studentId)}&student_name=${encodeURIComponent(studentName)}`;
+            })
+            .catch(error => console.error("Error:", error));
+        });
+        // استخراج بيانات الطالب من رابط الصفحة
+        document.addEventListener("DOMContentLoaded", function() {
+            // استخراج بيانات الطالب من رابط الصفحة
+            const urlParams = new URLSearchParams(window.location.search);
+            const studentName = urlParams.get('student_name');
+            const studentId = urlParams.get('student_id');
+    
+            // تحديث جميع الحقول التي قد تحتوي على اسم الطالب
+            if (studentName) {
+                const nameField = document.getElementById('name');
+                if (nameField) {
+                    nameField.value = studentName;
+                }
+            }
+    
+            // تحديث جميع الحقول التي قد تحتوي على الرقم الجامعي
+            if (studentId) {
+                const idField = document.getElementById('studentId');
+                if (idField) {
+                    idField.value = studentId;
+                }
+            }
+        });
+    
+            function updateForm() {
+                let requestType = document.getElementById("requestType").value;
+                let replacementFields = document.getElementById("replacementFields");
+                let lossFields = document.getElementById("lossFields");
+                
+                replacementFields.classList.add("hidden");
+                lossFields.classList.add("hidden");
+                
+                if (requestType === "استبدال البطاقة") {
+                    replacementFields.classList.remove("hidden");
+                } else if (requestType === "التبليغ عن الفقدان") {
+                    lossFields.classList.remove("hidden");
+                }
+            }
+            function updateFileLabel(inputId) {
+            let input = document.getElementById(inputId);
+            let label = document.getElementById(inputId + "Label");
+            if (input.files.length > 0) {
+                label.textContent = input.files[0].name;
+            } else {
+                label.textContent = "لا يوجد ملف مرفوع";
+            }
+        }
+        </script>
+</body>
+</html>

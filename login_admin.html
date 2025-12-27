@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="login()">تسجيل الدخول</button>
+    </div>
+
+    <script>
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('server.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, password })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('userPhone', data.phone);
+                sendWhatsAppCode(data.userId);
+            } else {
+                alert('بيانات الدخول غير صحيحة!');
+            }
+        }
+    </script>
+</body>
+</html>

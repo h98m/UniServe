@@ -1,0 +1,106 @@
+<?php
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "leave_requests";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("فشل الاتصال بقاعدة البيانات: " . $conn->connect_error);
+}
+
+if (!empty($_GET['request_id'])) {
+    $request_id = intval($_GET['request_id']);
+
+    // استعلام جلب تفاصيل الطلب
+    $stmt = $conn->prepare("SELECT student_name,status, leave_type, hospital, medical_file, relation, death_proof, created_at FROM leaves WHERE id = ?");
+    $stmt->bind_param("i", $request_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        ?>
+        <!DOCTYPE html>
+        <html lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>تفاصيل الطلب</title>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap">
+            <style>
+                body {
+                    font-family: 'Tajawal', sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f8f9fa;
+                    text-align: center;
+                }
+                .container {
+                    width: 90%;
+                    max-width: 600px;
+                    margin: 50px auto;
+                    padding: 20px;
+                    background-color: white;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                }
+                h1 {
+                    color: #002147;
+                }
+                .info {
+                    text-align: right;
+                    font-size: 18px;
+                    margin: 10px 0;
+                }
+                .back-button {
+                    display: inline-block;
+                    margin-top: 20px;
+                    padding: 10px 15px;
+                    background-color: #0056b3;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                }
+                .back-button:hover {
+                    background-color: #003d82;
+                }
+                .image-preview {
+                    margin-top: 10px;
+                    max-width: 100%;
+                    border-radius: 10px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>تفاصيل الطلب</h1>
+                <p class="info"><strong>اسم الطالب :</strong> <?php echo htmlspecialchars($row['student_name']); ?></p>
+                <p class="info"><strong>نوع الإجازة :</strong> <?php echo htmlspecialchars($row['leave_type']); ?></p>
+                <p class="info"><strong>حالة الطلب :</strong> <?php echo htmlspecialchars($row['status']); ?></p>
+                <p class="info"><strong>تاريخ الطلب :</strong> <?php echo htmlspecialchars($row['created_at']); ?></p>
+                <?php if ($row['leave_type'] == "مرضية") { ?>
+                    <p class="info"><strong>اسم المستشفى :</strong> <?php echo htmlspecialchars($row['hospital']); ?></p>
+                    <p class="info"><strong>التقرير الطبي</strong></p>
+                    <img class="image-preview" src="view_image.php?type=medical&request_id=<?php echo $request_id; ?>" alt="التقرير الطبي">
+                <?php } elseif ($row['leave_type'] == "وفاة") { ?>
+                    <p class="info"><strong>درجة القرابة :</strong> <?php echo htmlspecialchars($row['relation']); ?></p>
+                    <p class="info"><strong>شهادة الوفاة</strong></p>
+                    <img class="image-preview" src="view_image.php?type=death&request_id=<?php echo $request_id; ?>" alt="شهادة الوفاة">
+                <?php } ?>
+
+                <a href="TLPAT.php?student_id=<?php echo urlencode($_GET['student_id']); ?>&student_name=<?php echo urlencode($_GET['student_name']); ?>" class="back-button">العودة</a>
+            </div>
+        </body>
+        </html>
+        <?php
+    } else {
+        echo "<p style='color: red; text-align: center;'>لم يتم العثور على الطلب.</p>";
+    }
+    $stmt->close();
+} else {
+    echo "<p style='color: red; text-align: center;'>رقم الطلب غير موجود.</p>";
+}
+
+$conn->close();
+?>

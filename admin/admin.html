@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>تسجيل الدخول - جامعة المنصور</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f7;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+      position: relative;
+    }
+
+           .logo-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 750px;
+            height: 750px;
+            opacity: 0.1;  
+            z-index: 1;
+        }
+    .login-container {
+      background-color: #ffffff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      transition: transform 0.3s ease-in-out;
+      z-index: 1;
+    }
+
+    .login-container:hover {
+      transform: translateY(-5px);
+    }
+
+    h2 {
+      font-size: 26px;
+      color: #0069d9;
+      margin-bottom: 25px;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="password"], #otp {
+      width: 100%;
+      padding: 14px;
+      margin: 12px 0;
+      border: 1px solid #dcdcdc;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus, #otp:focus {
+      border-color: #0069d9;
+      box-shadow: 0 0 10px rgba(0, 105, 217, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background-color: #0069d9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    #message {
+      font-size: 15px;
+      color: #dc3545;
+      margin-top: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    #message.success {
+      color: #28a745;
+    }
+
+    #otp-form {
+      display: none;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 500px) {
+      .login-container {
+        padding: 25px 30px;
+      }
+      h2 {
+        font-size: 22px;
+      }
+      input[type="text"], input[type="password"], #otp {
+        font-size: 14px;
+        padding: 12px;
+      }
+      button {
+        font-size: 14px;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <img src="muclogo-01.svg" alt="شعار الجامعة" class="logo-bg"/>
+
+  <div class="login-container">
+    <h2>تسجيل الدخول</h2>
+    <form id="login-form">
+      <input type="text" id="username" name="username" placeholder="اسم المستخدم" required>
+      <input type="password" id="password" name="password" placeholder="كلمة المرور" required>
+      <button type="submit">تسجيل الدخول</button>
+    </form>
+
+    <form id="otp-form">
+      <input type="text" id="otp" name="otp" placeholder="أدخل رمز التحقق" required>
+      <button type="submit">تحقق</button>
+    </form>
+
+    <p id="message"></p>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("login-form");
+    const otpForm = document.getElementById("otp-form");
+    const messageElement = document.getElementById("message");
+
+    loginForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const loginButton = loginForm.querySelector("button");
+      loginButton.disabled = true;
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      messageElement.innerText = "جاري التحقق...";
+      messageElement.style.color = "#0069d9";
+
+      fetch("login1.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          loginForm.style.display = "none";
+          otpForm.style.display = "block";
+          messageElement.innerText = "تم إرسال رمز التحقق إلى واتساب.";
+          messageElement.classList.add("success");
+        } else {
+          messageElement.innerText = "اسم المستخدم أو كلمة المرور غير صحيحة.";
+          messageElement.classList.remove("success");
+          messageElement.style.color = "#dc3545";
+        }
+      })
+      .catch(error => {
+        messageElement.innerText = "حدث خطأ أثناء تسجيل الدخول.";
+        messageElement.classList.remove("success");
+        messageElement.style.color = "#dc3545";
+      })
+      .finally(() => {
+        loginButton.disabled = false;
+      });
+    });
+
+    otpForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      const otpButton = otpForm.querySelector("button");
+      otpButton.disabled = true;
+
+      const otp = document.getElementById("otp").value;
+
+      messageElement.innerText = "جارٍ التحقق من الرمز...";
+      messageElement.style.color = "#0069d9";
+
+      fetch("verify.php", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: `otp=${encodeURIComponent(otp)}`
+      })
+      .then(response => response.text())
+      .then(data => {
+        if (data.trim() === "success") {
+          messageElement.innerText = "تم التحقق بنجاح. سيتم تحويلك...";
+          messageElement.classList.add("success");
+          setTimeout(() => {
+            window.location.href = "dashboard.php";
+          }, 1500);
+        } else {
+          messageElement.innerText = "رمز التحقق غير صحيح.";
+          messageElement.classList.remove("success");
+          messageElement.style.color = "#dc3545";
+        }
+      })
+      .catch(error => {
+        messageElement.innerText = "حدث خطأ أثناء التحقق.";
+        messageElement.classList.remove("success");
+        messageElement.style.color = "#dc3545";
+      })
+      .finally(() => {
+        otpButton.disabled = false;
+      });
+    });
+  </script>
+</body>
+</html>
